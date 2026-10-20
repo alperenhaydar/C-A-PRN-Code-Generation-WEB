@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GPS C/A PRN — Alperen Haydar Işık</title>
+
+<style>
+:root {
+  --bg: #080f1c;
+  --panel: #111d30;
+  --border: #263750;
+  --text: #ecf2ff;
+  --muted: #a0b0c9;
+  --cyan: #64e4d1;
+  --blue: #87acff;
+  --gold: #ffd18a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 85% 5%, #163653 0, transparent 32%),
+    var(--bg);
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+}
+
+button, select, input { font: inherit; }
+
+button, select {
+  color: var(--text);
+  background: #192940;
+  border: 1px solid #3a4e6c;
+  padding: 12px 18px;
+  border-radius: 10px;
+}
+
+button { cursor: pointer; }
+
+button:hover {
+  border-color: var(--cyan);
+  background: #20354c;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 4px;
+}
+
+main {
+  max-width: 1160px;
+  margin: auto;
+  padding: 45px 24px;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 0 35px;
+}
+
+.eyebrow {
+  color: var(--cyan);
+  font-size: 12px;
+  letter-spacing: 3px;
+  font-weight: bold;
+}
+
+h1 {
+  font-size: clamp(35px, 5vw, 62px);
+  line-height: 1.1;
+  letter-spacing: -2px;
+  margin: 18px 0;
+}
+
+h1 span { color: var(--cyan); }
+
+.hero p {
+  color: var(--muted);
+  max-width: 520px;
+}
+
+.satellite-art {
+  width: 270px;
+  flex-shrink: 0;
+}
+
+.orbit {
+  transform-origin: 150px 150px;
+  animation: orbit 35s linear infinite;
+}
+
+.floating {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+
+.card {
+  padding: 25px;
+  background: linear-gradient(135deg, #132137, #0e192a);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  margin-bottom: 22px;
+  min-width: 0;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 21px;
+  margin: 0;
+  letter-spacing: -.5px;
+}
+
+h3 { font-size: 16px; }
+
+.muted { color: var(--muted); }
+
+.small { font-size: 12px; }
+
+.selector-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.selector-row label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+#satellite { min-width: 240px; }
+
+.badge {
+  display: inline-block;
+  color: var(--cyan);
+  border: 1px solid #64e4d140;
+  background: #64e4d10a;
+  border-radius: 7px;
+  padding: 5px 11px;
+  font-size: 12px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 25px;
+}
+
+.info {
+  padding: 20px;
+  border-radius: 12px;
+  background: #080f1c80;
+  border: 1px solid var(--border);
+}
+
+.info small {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.info strong {
+  display: block;
+  font-size: 25px;
+  font-family: Consolas, monospace;
+}
+
+.polynomials {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.poly {
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: #080f1c80;
+  border: 1px solid var(--border);
+}
+
+.poly small {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.formula {
+  font-family: Consolas, monospace;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.cyan { color: var(--cyan); }
+.blue { color: var(--blue); }
+.gold { color: var(--gold); }
+
+.selection-formula {
+  margin-top: 14px;
+  border-left: 3px solid var(--gold);
+  background: #ffd18a08;
+  padding: 15px 20px;
+  border-radius: 0 10px 10px 0;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.primary {
+  color: #052720;
+  background: var(--cyan);
+  border-color: var(--cyan);
+  font-weight: bold;
+}
+
+.primary:hover { background: #93f3e4; }
+
+.register-block { margin-top: 25px; }
+
+.register-heading {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.register-scroll { overflow-x: auto; padding-bottom: 8px; }
+
+.register {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 650px;
+}
+
+.cell {
+  position: relative;
+  flex: 1;
+  text-align: center;
+  min-width: 48px;
+}
+
+.stage {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.bit {
+  display: block;
+  border: 1px solid #344d69;
+  border-radius: 9px;
+  padding: 10px 0;
+  background: #0b1422;
+  font-family: Consolas, monospace;
+  font-size: 23px;
+  transition: background .15s;
+}
+
+.bit.one {
+  background: #64e4d115;
+  color: var(--cyan);
+}
+
+.g2 .bit.one {
+  color: var(--blue);
+  background: #87acff15;
+}
+
+.cell.selected .bit {
+  border: 2px solid var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 15px #ffd18a14;
+  padding: 9px 0;
+}
+
+.cell:not(:last-child)::after {
+  content: "›";
+  position: absolute;
+  right: -8px;
+  top: 34px;
+  color: #667b98;
+  font-size: 13px;
+}
+
+.feedback {
+  margin-top: 10px;
+  color: var(--muted);
+  font: 12px/1.7 Consolas, monospace;
+}
+
+.output {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 24px 15px;
+  margin-top: 24px;
+  background: #080f1c;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.output-item { text-align: center; }
+
+.output-item small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.output-item strong {
+  font: 35px/1.4 Consolas, monospace;
+}
+
+.operator { font-size: 26px; color: var(--muted); }
+
+.result {
+  min-width: 100px;
+  background: #64e4d110;
+  border-radius: 10px;
+  padding: 5px 15px;
+}
+
+.timeline {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.timeline input {
+  flex: 1;
+  width: 100%;
+  accent-color: var(--cyan);
+}
+
+.timeline label {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.wave-scroll { overflow-x: auto; }
+
+#wave {
+  display: block;
+  width: 100%;
+  min-width: 640px;
+}
+
+.chip-strip {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding: 14px 0;
+}
+
+.chip {
+  flex-shrink: 0;
+  width: 27px;
+  text-align: center;
+  border-radius: 5px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  font: 13px/30px Consolas, monospace;
+}
+
+.chip.active {
+  color: #052720;
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.chip.past { color: var(--cyan); background: #64e4d10a; }
+
+.theory {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.theory-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.theory h3 { color: var(--text); }
+
+.theory a { color: var(--cyan); }
+
+footer {
+  text-align: center;
+  padding: 35px 20px 45px;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  letter-spacing: 4px;
+}
+
+@media(max-width: 700px) {
+  main { padding: 24px 15px; }
+  .hero { gap: 0; }
+  .satellite-art { width: 120px; }
+  h1 { font-size: 35px; letter-spacing: -1px; }
+  .hero p { font-size: 13px; }
+  .card { padding: 18px; }
+  .info-grid { gap: 8px; }
+  .info { padding: 13px 10px; }
+  .info strong { font-size: 19px; }
+  .info small { font-size: 10px; }
+  .polynomials, .theory-grid { grid-template-columns: 1fr; }
+  .formula { font-size: 16px; }
+  .output { gap: 12px; }
+  footer { letter-spacing: 2px; }
+}
+
+@media(prefers-reduced-motion: reduce) {
+  .orbit, .floating { animation: none; }
+  * { scroll-behavior: auto !important; }
+}
+</style>
+</head>
+
+<body>
+<main>
+
+  <header class="hero">
+    <div>
+      <div class="eyebrow">GPS · C/A CODE GENERATION</div>
+      <h1>Uyduyu seç.<br><span>Kodun oluşumunu izle.</span></h1>
+      <p>
+        GPS uydusunun PRN kodunu, faz seçimini ve sinyalini
+        tek ekranda keşfet.
+      </p>
+    </div>
+
+    <!-- Dekoratif uydu çizimi -->
+    <svg class="satellite-art" viewBox="0 0 300 300" aria-hidden="true">
+      <defs>
+        <radialGradient id="planet">
+          <stop offset="0" stop-color="#32557a"/>
+          <stop offset="1" stop-color="#101e32"/>
+        </radialGradient>
+        <linearGradient id="panel" x2="1" y2="1">
+          <stop stop-color="#294c78"/>
+          <stop offset="1" stop-color="#152d4d"/>
+        </linearGradient>
+      </defs>
+
+      <circle cx="150" cy="150" r="109" fill="none" stroke="#29435f"
+              stroke-dasharray="3 8"/>
+      <circle cx="150" cy="150" r="77" fill="url(#planet)" opacity=".65"/>
+      <g class="orbit">
+        <ellipse cx="150" cy="150" rx="140" ry="56"
+                 fill="none" stroke="#64e4d1" opacity=".25"/>
+        <circle cx="290" cy="150" r="4" fill="#64e4d1"/>
+      </g>
+
+      <g class="floating">
+        <g transform="rotate(-28 150 150)">
+          <path d="M85 150H215" stroke="#abc4df" stroke-width="6"/>
+          <rect x="31" y="122" width="66" height="56" rx="4"
+                fill="url(#panel)" stroke="#87acff" stroke-width="2"/>
+          <rect x="203" y="122" width="66" height="56" rx="4"
+                fill="url(#panel)" stroke="#87acff" stroke-width="2"/>
+          <path d="M53 122V178M75 122V178M31 150H97
+                   M225 122V178M247 122V178M203 150H269"
+                stroke="#87acff" opacity=".65"/>
+          <rect x="123" y="118" width="54" height="64" rx="8"
+                fill="#d9e5f1" stroke="#fff" stroke-width="2"/>
+          <rect x="131" y="128" width="38" height="43" rx="4"
+                fill="#a9bed2"/>
+          <path d="M150 118V100" stroke="#d9e5f1" stroke-width="4"/>
+          <path d="M129 91Q150 116 171 91" fill="#e9f2fb"/>
+          <path d="M150 99V85" stroke="#fff" stroke-width="3"/>
+          <circle cx="150" cy="83" r="4" fill="#64e4d1"/>
+          <path d="M140 70Q150 62 160 70M131 58Q150 43 169 58"
+                fill="none" stroke="#64e4d1" stroke-width="2"
+                stroke-linecap="round"/>
+        </g>
+      </g>
+      <circle cx="57" cy="58" r="2" fill="#ffd18a"/>
+      <circle cx="244" cy="239" r="3" fill="#87acff"/>
+    </svg>
+  </header>
+
+  <section class="card">
+    <div class="selector-row">
+      <div>
+        <label for="satellite">GPS uydu numarası · SV ID</label>
+        <select id="satellite"></select>
+      </div>
+      <span class="badge">1023 chip · 1 ms · 1.023 Mcps</span>
+    </div>
+
+    <div class="info-grid">
+      <div class="info">
+        <small>GPS UYDU NUMARASI</small>
+        <strong id="svNumber"></strong>
+      </div>
+      <div class="info">
+        <small>GPS PRN SIGNAL NUMBER</small>
+        <strong id="prnNumber" class="cyan"></strong>
+      </div>
+      <div class="info">
+        <small>KOD FAZ SEÇİMİ · G2</small>
+        <strong id="phaseSelection" class="gold"></strong>
+      </div>
+    </div>
+
+    <div class="polynomials">
+      <div class="poly">
+        <small>G1 GERİ BESLEME POLİNOMU</small>
+        <div class="formula cyan">
+          G₁(x) = 1 + x³ + x¹⁰
+        </div>
+      </div>
+      <div class="poly">
+        <small>G2 GERİ BESLEME POLİNOMU</small>
+        <div class="formula blue">
+          G₂(x) = 1 + x² + x³ + x⁶ + x⁸ + x⁹ + x¹⁰
+        </div>
+      </div>
+    </div>
+
+    <div class="selection-formula">
+      <div id="selectedPolynomial" class="formula gold"></div>
+      <div id="selectedEquation" class="small muted"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-title">
+      <h2>Kod nasıl oluşuyor?</h2>
+      <span id="chipCounter" class="badge">CHIP 1 / 1023</span>
+    </div>
+
+    <div class="controls">
+      <button id="play" class="primary">▶ Başlat</button>
+      <button id="step">Bir adım →</button>
+      <button id="reset">↺ Sıfırla</button>
+    </div>
+
+    <div class="register-block">
+      <div class="register-heading">
+        <strong class="cyan">G1 yazmacı</strong>
+        <span class="muted small">Kaydırma yönü →</span>
+      </div>
+      <div class="register-scroll">
+        <div id="g1" class="register"></div>
+      </div>
+      <div id="g1Feedback" class="feedback"></div>
+    </div>
+
+    <div class="register-block">
+      <div class="register-heading">
+        <strong class="blue">G2 yazmacı</strong>
+        <span class="gold small">Sarı kutular: seçilen iki kademe</span>
+      </div>
+      <div class="register-scroll">
+        <div id="g2" class="register g2"></div>
+      </div>
+      <div id="g2Feedback" class="feedback"></div>
+    </div>
+
+    <div class="output">
+      <div class="output-item">
+        <small>G1 · 10. kademe</small>
+        <strong id="g1Out" class="cyan"></strong>
+      </div>
+      <span class="operator">⊕</span>
+      <div class="output-item">
+        <small id="g2OutLabel"></small>
+        <strong id="g2Out" class="blue"></strong>
+      </div>
+      <span class="operator">=</span>
+      <div class="output-item result">
+        <small>C/A CHIP</small>
+        <strong id="caOut" class="cyan"></strong>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <label for="position">Chip seç</label>
+      <input type="range" id="position" min="0" max="1022" value="0">
+    </div>
+
+    <p class="small muted">
+      Başlat, üretimi yavaşlatılmış olarak gösterir.
+      Her adımda önce çıkış okunur, ardından bitler sağa kayar.
+    </p>
+  </section>
+
+  <section class="card">
+    <div class="section-title">
+      <h2>Sinyal oluşumu</h2>
+      <span id="windowLabel" class="badge"></span>
+    </div>
+
+    <div class="wave-scroll">
+      <svg id="wave" viewBox="0 0 1000 310"
+           role="img" aria-label="G1, G2 faz çıkışı ve C/A sinyali"></svg>
+    </div>
+
+    <div class="small muted">
+      C/A kod dizisi · gösterilen 32 chip · seçili chip vurgulu
+    </div>
+    <div id="chipStrip" class="chip-strip"></div>
+
+    <p class="small muted">
+      Yeşil: G1 çıkışı · Mavi: seçilen G2 kademelerinin XOR’u ·
+      Sarı: oluşan C/A kodu
+    </p>
+  </section>
+
+  <section class="card theory">
+    <h2>Kısaca çalışma prensibi</h2>
+
+    <div class="theory-grid">
+      <div>
+        <h3>İki yazmaç, bir PRN kodu</h3>
+        <p>
+          G1 ve G2, başlangıçta bütün bitleri 1 olan iki adet
+          10 kademeli yazmaçtır. Her saat darbesinde geri besleme
+          bitleri hesaplanır ve bitler bir kademe sağa kayar.
+        </p>
+        <p>
+          G1’in 10. kademesi ile G2’nin seçilen iki kademesinin
+          XOR sonucu birleştirilir. Böylece seçili PRN’nin C/A
+          kodu oluşur. ⊕ işareti XOR anlamındadır:
+          aynı bitler 0, farklı bitler 1 üretir.
+        </p>
+      </div>
+
+      <div>
+        <h3>Uydu seçince ne değişiyor?</h3>
+        <p>
+          G1 ve G2’nin geri besleme polinomları sabittir.
+          Seçime göre değişen, G2’den alınan iki faz seçim
+          kademesidir. Kod 1023 chip sonra tekrar eder.
+        </p>
+        <p>
+          Ekrandaki Q(x), seçilen kademelerin sembolik polinom
+          gösterimidir: x’in üssü kademe numarasını belirtir.
+          Ayrı bir geri besleme polinomu değildir.
+        </p>
+      </div>
+    </div>
+
+    <p class="small">
+      Uydu seçimi, IS-GPS-200N Tablo 3-Ia’daki SV ID 1–32
+      eşlemesini kullanır; güncel fiziksel uydu/SVN tahsisini göstermez.
+      Yazmaçlar soldan sağa 1–10 numaralandırılmıştır.
+    </p>
+
+    <a class="small"
+       href="https://www.gps.gov/sites/default/files/2025-07/IS-GPS-200N.pdf"
+       target="_blank" rel="noopener noreferrer">
+      Kaynak: IS-GPS-200N · Tablo 3-Ia ve §3.3.2.3
+    </a>
+  </section>
+</main>
+
+<footer>ALPEREN HAYDAR IŞIK</footer>
+
+<script>
+"use strict";
+
+/*
+ * GPS C/A phase-selection pairs.
+ * IS-GPS-200N Table 3-Ia, SV ID / PRN 1–32.
+ * Array indices are zero-based; stage numbers are one-based.
+ */
+const TAPS = [
+  [2,6], [3,7], [4,8], [5,9],
+  [1,9], [2,10], [1,8], [2,9],
+  [3,10], [2,3], [3,4], [5,6],
+  [6,7], [7,8], [8,9], [9,10],
+  [1,4], [2,5], [3,6], [4,7],
+  [5,8], [6,9], [1,3], [4,6],
+  [5,7], [6,8], [7,9], [8,10],
+  [1,6], [2,7], [3,8], [4,9]
+];
+
+const $ = id => document.getElementById(id);
+const LENGTH = 1023;
+const WINDOW = 32;
+
+let prn = 1;
+let chip = 0;
+let sequence = [];
+let timer = null;
+
+/*
+ * Read output BEFORE shifting.
+ * g1[0] = stage 1, g1[9] = stage 10.
+ */
+function generate(prnNumber) {
+  const [a, b] = TAPS[prnNumber - 1];
+
+  let g1 = Array(10).fill(1);
+  let g2 = Array(10).fill(1);
+
+  const result = [];
+
+  for (let n = 0; n < LENGTH; n++) {
+    const feedback1 = g1[2] ^ g1[9];
+
+    const feedback2 =
+      g2[1] ^ g2[2] ^ g2[5] ^
+      g2[7] ^ g2[8] ^ g2[9];
+
+    const g1Output = g1[9];
+    const phaseOutput = g2[a - 1] ^ g2[b - 1];
+    const ca = g1Output ^ phaseOutput;
+
+    result.push({
+      g1: [...g1],
+      g2: [...g2],
+      feedback1,
+      feedback2,
+      g1Output,
+      phaseOutput,
+      ca
+    });
+
+    g1 = [feedback1, ...g1.slice(0, 9)];
+    g2 = [feedback2, ...g2.slice(0, 9)];
+  }
+
+  return result;
+}
+
+function renderRegister(elementId, bits, selectedStages = []) {
+  $(elementId).innerHTML = bits.map((bit, i) => {
+    const selected = selectedStages.includes(i + 1);
+
+    return `
+      <div class="cell ${selected ? "selected" : ""}">
+        <span class="stage">${i + 1}</span>
+        <span class="bit ${bit ? "one" : ""}">${bit}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderCurrentState() {
+  const state = sequence[chip];
+  const [a, b] = TAPS[prn - 1];
+
+  renderRegister("g1", state.g1);
+  renderRegister("g2", state.g2, [a, b]);
+
+  $("chipCounter").textContent = `CHIP ${chip + 1} / ${LENGTH}`;
+  $("position").value = chip;
+  $("position").setAttribute("aria-valuetext", `Chip ${chip + 1}`);
+
+  $("g1Feedback").textContent =
+    `Yeni giriş: G1[3] ⊕ G1[10] = ` +
+    `${state.g1[2]} ⊕ ${state.g1[9]} = ${state.feedback1}`;
+
+  $("g2Feedback").textContent =
+    `Yeni giriş: G2[2] ⊕ G2[3] ⊕ G2[6] ⊕ ` +
+    `G2[8] ⊕ G2[9] ⊕ G2[10] = ${state.feedback2}`;
+
+  $("g1Out").textContent = state.g1Output;
+  $("g2OutLabel").textContent = `G2[${a}] ⊕ G2[${b}]`;
+  $("g2Out").textContent =
+    `${state.g2[a - 1]} ⊕ ${state.g2[b - 1]}`;
+
+  $("caOut").textContent = state.ca;
+
+  renderWave();
+}
+
+function renderWave() {
+  // Keep a complete 32-chip window, including at the end.
+  const start = Math.min(
+    Math.floor(chip / WINDOW) * WINDOW,
+    LENGTH - WINDOW
+  );
+
+  const left = 95;
+  const right = 980;
+  const dx = (right - left) / WINDOW;
+
+  $("windowLabel").textContent =
+    `CHIP ${start + 1}–${start + WINDOW}`;
+
+  const tracks = [
+    { label: "G1", color: "#64e4d1", key: "g1Output" },
+    { label: "G2ᵢ", color: "#87acff", key: "phaseOutput" },
+    { label: "C/A", color: "#ffd18a", key: "ca" }
+  ];
+
+  let svg = `
+    <rect
+      x="${left + (chip - start) * dx}"
+      y="10"
+      width="${dx}"
+      height="264"
+      rx="4"
+      fill="#ffffff0b"
+    />
+  `;
+
+  tracks.forEach((track, row) => {
+    const high = 30 + row * 90;
+    const low = high + 43;
+
+    svg += `
+      <text x="10" y="${high + 26}"
+        fill="${track.color}" font-size="16"
+        font-family="Consolas, monospace">${track.label}</text>
+
+      <text x="70" y="${high + 4}"
+        fill="#a0b0c9" font-size="11">1</text>
+
+      <text x="70" y="${low + 4}"
+        fill="#a0b0c9" font-size="11">0</text>
+
+      <path d="M${left} ${high}H${right}
+               M${left} ${low}H${right}"
+        fill="none" stroke="#263750"/>
+    `;
+
+    let path = "";
+
+    for (let i = 0; i < WINDOW; i++) {
+      const value = sequence[start + i][track.key];
+      const x = left + i * dx;
+      const y = value ? high : low;
+
+      path += i === 0 ? `M${x} ${y}` : `V${y}`;
+      path += `H${x + dx}`;
+
+      if (row === 2) {
+        svg += `
+          <text
+            x="${x + dx / 2}"
+            y="${low + 19}"
+            text-anchor="middle"
+            fill="${start + i === chip ? "#ffd18a" : "#8293ae"}"
+            font-size="11"
+            font-family="Consolas, monospace"
+          >${value}</text>
+        `;
+      }
+    }
+
+    svg += `
+      <path d="${path}"
+        fill="none"
+        stroke="${track.color}"
+        stroke-width="2.3"
+        stroke-linejoin="round"/>
+    `;
+  });
+
+  // Labels correspond to chip centers, not boundaries.
+  for (let i = 0; i < WINDOW; i += 4) {
+    svg += `
+      <text
+        x="${left + (i + 0.5) * dx}"
+        y="301"
+        text-anchor="middle"
+        fill="#a0b0c9"
+        font-size="11"
+        font-family="Consolas, monospace"
+      >${start + i + 1}</text>
+    `;
+  }
+
+  $("wave").innerHTML = svg;
+
+  $("chipStrip").innerHTML =
+    sequence.slice(start, start + WINDOW).map((state, i) => {
+      const n = start + i;
+      const cls = n === chip ? "active" : n < chip ? "past" : "";
+
+      return `
+        <span class="chip ${cls}" title="Chip ${n + 1}">
+          ${state.ca}
+        </span>
+      `;
+    }).join("");
+}
+
+function pause() {
+  clearInterval(timer);
+  timer = null;
+  $("play").textContent = "▶ Başlat";
+  $("play").setAttribute("aria-pressed", "false");
+}
+
+function nextChip() {
+  chip = (chip + 1) % LENGTH;
+  renderCurrentState();
+}
+
+function togglePlay() {
+  if (timer !== null) {
+    pause();
+    return;
+  }
+
+  $("play").textContent = "Ⅱ Duraklat";
+  $("play").setAttribute("aria-pressed", "true");
+
+  // Four chips per second, deliberately slowed for teaching.
+  timer = setInterval(nextChip, 250);
+}
+
+function selectSatellite() {
+  pause();
+
+  prn = Number($("satellite").value);
+  chip = 0;
+  sequence = generate(prn);
+
+  const [a, b] = TAPS[prn - 1];
+
+  $("svNumber").textContent = String(prn).padStart(2, "0");
+  $("prnNumber").textContent = `PRN ${String(prn).padStart(2, "0")}`;
+  $("phaseSelection").textContent = `${a} ⊕ ${b}`;
+
+  $("selectedPolynomial").innerHTML =
+    `Faz seçimi: Q(x) = x<sup>${a}</sup> + x<sup>${b}</sup>`;
+
+  $("selectedEquation").textContent =
+    `Kademe gösterimi · C/A = G1[10] ⊕ G2[${a}] ⊕ G2[${b}]`;
+
+  renderCurrentState();
+}
+
+$("satellite").innerHTML = TAPS.map((_, i) => `
+  <option value="${i + 1}">
+    GPS Uydu ${String(i + 1).padStart(2, "0")}
+  </option>
+`).join("");
+
+$("satellite").addEventListener("change", selectSatellite);
+
+$("play").addEventListener("click", togglePlay);
+
+$("step").addEventListener("click", () => {
+  pause();
+  nextChip();
+});
+
+$("reset").addEventListener("click", () => {
+  pause();
+  chip = 0;
+  renderCurrentState();
+});
+
+$("position").addEventListener("input", event => {
+  pause();
+  chip = Number(event.target.value);
+  renderCurrentState();
+});
+
+// Avoid running the animation while the tab is hidden.
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) pause();
+});
+
+selectSatellite();
+</script>
+</body>
+</html>
